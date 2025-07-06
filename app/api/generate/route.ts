@@ -1,4 +1,3 @@
-// app/api/generate/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { OpenAI } from "openai";
 
@@ -7,9 +6,9 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { company, product, target, benefit, tone, purpose} = body;
+    const { company, product, target, benefit, tone, purpose } = body;
 
-    // 入力バリデーションを追加
+    // 入力バリデーション
     if (![company, product, target, benefit, tone, purpose].every(
       (v) => typeof v === "string" && v.trim() !== ""
     )) {
@@ -36,8 +35,12 @@ export async function POST(req: NextRequest) {
 
     const result = chatCompletion.choices[0].message.content;
     return NextResponse.json({ result });
-  } catch (e: any) {
-    console.error("❌ APIエラー:", e.message);
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      console.error("❌ APIエラー:", e.message);
+    } else {
+      console.error("❌ APIエラー:", e);
+    }
     return NextResponse.json({ error: "サーバーエラー" }, { status: 500 });
   }
 }
