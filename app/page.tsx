@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { auth, provider, db } from "../lib/firebase";
 import { signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
 import {
@@ -34,18 +34,7 @@ export default function Home() {
   const [filterPurpose, setFilterPurpose] = useState("すべて");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    if (user) fetchHistory(user.uid);
-  }, [user]);
-
-  const fetchHistory = async (uid: string) => {
+  const fetchHistory = useCallback(async (uid: string) => {
     try {
       const q = query(
         collection(db, "email_histories"),
@@ -78,7 +67,18 @@ export default function Home() {
     } catch (error) {
       console.error("履歴取得エラー", error);
     }
-  };
+  }, [keyword, filterTone, filterPurpose, sortOrder]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (user) fetchHistory(user.uid);
+  }, [user, fetchHistory]);
 
   const handleLogin = async () => {
     try {
@@ -150,7 +150,6 @@ export default function Home() {
 
   const handleExportCSV = () => {
     if (history.length === 0) return;
-  
     const header = ["会社名", "サービス名", "ターゲット", "アピールポイント", "トーン", "目的", "メール本文"];
     const rows = history.map((item) => [
       item.form.company,
@@ -159,17 +158,11 @@ export default function Home() {
       item.form.benefit,
       item.form.tone,
       item.form.purpose,
-      item.result.replace(/\n/g, " ")  // 改行をスペースに
+      item.result.replace(/\n/g, " ")
     ]);
-  
-    const csvContent =
-      [header, ...rows]
-        .map((row) => row.map((v) => `"${v}"`).join(","))
-        .join("\n");
-  
+    const csvContent = [header, ...rows].map(row => row.map(v => `"${v}"`).join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-  
     const link = document.createElement("a");
     link.href = url;
     link.setAttribute("download", "email_history.csv");
@@ -177,7 +170,9 @@ export default function Home() {
     link.click();
     document.body.removeChild(link);
   };
-  
+
+
+
 
   return (
     <main className="min-h-screen bg-white text-gray-800 py-10 px-4">
