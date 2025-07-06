@@ -7,7 +7,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { company, product, target, benefit, tone, purpose, sortBy, keyword } = body;
+    const { company, product, target, benefit, tone, purpose} = body;
 
     // 入力バリデーションを追加
     if (![company, product, target, benefit, tone, purpose].every(
