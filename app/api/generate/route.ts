@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { OpenAI } from "openai";
 
@@ -8,7 +9,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { company, product, target, benefit, tone, purpose } = body;
 
-    // 入力バリデーション
+    // 入力バリデーションを追加
     if (![company, product, target, benefit, tone, purpose].every(
       (v) => typeof v === "string" && v.trim() !== ""
     )) {
